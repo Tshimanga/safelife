@@ -39,7 +39,7 @@ def parse_args(argv=sys.argv[1:]):
         "If 'train', train the model. If 'benchmark', run the model on testing "
         "environments. If 'inspect', load an ipython prompt for interactive "
         "debugging.")
-    parser.add_argument('--algo', choices=('ppo', 'dqn'), default='ppo')
+    parser.add_argument('--algo', choices=('ppo', 'dqn', 'sac'), default='ppo')
     parser.add_argument('-e', '--env-type', default='append-spawn')
     parser.add_argument('-s', '--steps', type=float, default=6e6,
         help='Length of training in steps (default: 6e6).')
@@ -255,6 +255,10 @@ def launch_training(config, data_dir):
         from training.dqn import DQN as algo_cls
         algo_args['training_model'] = models.SafeLifeQNetwork(obs_shape)
         algo_args['target_model'] = models.SafeLifeQNetwork(obs_shape)
+    elif config['algo'] == 'sac':
+        from training.sac import SAC as algo_cls
+        algo_args['policy_network'] = models.SafeLifePolicyNetwork(obs_shape)
+        algo_args['q_network'] = lambda: models.SafeLifeQNetwork(obs_shape)
     else:
         logger.error("Unexpected algorithm type '%s'", config['algo'])
         raise ValueError("unexpected algorithm type")

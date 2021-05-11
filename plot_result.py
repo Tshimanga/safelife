@@ -4,6 +4,7 @@ import os
 import numpy as np
 from collections import defaultdict
 from matplotlib import pyplot as plt
+import pandas as pd
 
 
 def summarize_run_file(logfile, se_weights=None):
@@ -53,16 +54,24 @@ def collect_results(data_dir, fnames):
     return results
 
 
-def plot_results(results):
-    plt.figure()
-    for run_type, result in results.items():
-        plt.plot(result['score'], label=run_type)
-    plt.legend()
+def plot_results(results, run_types=('training', 'benchmark', 'validation')):
+    metrics = ['success', 'reward', 'side_effects', 'length', 'score']
+    color = ['r', 'g', 'b', 'k', 'y', 'c', 'm']
+    ws = {'training': 50, 'benchmark': 20, 'validation': 1}
+    fig, ax = plt.subplots(nrows=len(metrics), ncols=len(run_types), figsize=(18, 9))
+    for icol, (run_type, result) in enumerate(results.items()):
+        for irow, metric in enumerate(metrics):
+            ax[irow, icol].plot(result[metric], color[irow], alpha=0.3)
+            ax[irow, icol].plot(pd.Series(result[metric]).rolling(ws[run_type]).mean().to_numpy(), color[irow],
+                                label=metric)
+            ax[irow, icol].legend()
+    for ax, col in zip(ax[0], run_types):
+        ax.set_title(col)
     plt.show()
 
 
 if __name__ == '__main__':
-    data_dir = r'E:\courses\full-stack-deep-learning\safelife\safelife-master\runs\ppo\sideEffect03_long'
+    data_dir = r'E:\courses\full-stack-deep-learning\safelife\safelife-master\runs\ppo\fc2x256'
     run_types = ['training', 'validation', 'benchmark']
     results = collect_results(data_dir, run_types)
     plot_results(results)
